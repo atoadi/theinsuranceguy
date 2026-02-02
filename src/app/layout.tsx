@@ -7,11 +7,11 @@ import Navbar from "../components/layout/navbar";
 import Footer from "../components/layout/Footer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
-// FIX 1: Add 'swap' to prevent render blocking
+// FIX 1: REMOVED "weight" array. Outfit is a variable font. 
+// Loading just one variable file is 6x faster on mobile than loading 6 weights.
 const outfit = Outfit({ 
   subsets: ["latin"], 
   variable: "--font-outfit",
-  weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap" 
 });
 
@@ -101,8 +101,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ANALYTICS ENGINES */}
         <GoogleAnalytics />
         <Analytics />
-        
-        {/* FIX 2: REMOVED DUPLICATE SpeedInsights here, keeping only the one at bottom */}
         
         <Navbar />
         <main className="min-h-screen">

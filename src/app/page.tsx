@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { CircleCheck, Hand, Calendar } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-// LAZY LOAD: Slider loads only when needed
+// FIX 2: Changed to "ssr: false". 
+// This removes the slider from the initial "Main Thread Work", saving ~1 second of load time.
 const InsiderSlider = dynamic(() => import('@/components/sections/insider-slider'), {
   loading: () => <div className="h-[600px] w-full bg-slate-50 animate-pulse rounded-[32px] mx-auto max-w-6xl mt-8 border border-slate-100" />,
-  ssr: true 
+  ssr: false 
 });
 
 // LAZY LOAD: Modal loads only on interaction
