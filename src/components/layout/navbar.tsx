@@ -1,113 +1,141 @@
 "use client";
-
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, Variants } from "framer-motion";
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+// OPTIMIZATION: Use 'm' instead of 'motion' and wrap in LazyMotion
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import EmergencyModal from '../ui/emergency-modal';
-
-
-interface NavLink { name: string; href: string; }
-
-// --- ANIMATION VARIANTS ---
-const line1Variants: Variants = {
-  closed: { rotate: 0, y: -6, transition: { rotate: { duration: 0.2 }, y: { delay: 0.2, duration: 0.2 } } },
-  opened: { rotate: 45, y: 0, transition: { y: { duration: 0.2 }, rotate: { delay: 0.2, duration: 0.25, ease: [0.22, 1, 0.36, 1] } } },
-};
-const line2Variants: Variants = {
-  closed: { rotate: 0, y: 6, transition: { rotate: { duration: 0.2 }, y: { delay: 0.2, duration: 0.2 } } },
-  opened: { rotate: -45, y: 0, transition: { y: { duration: 0.2 }, rotate: { delay: 0.2, duration: 0.25, ease: [0.22, 1, 0.36, 1] } } },
-};
-const listVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
-};
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }
-};
+import { Menu, X, Phone, Shield, FileText, Wrench, ChevronRight } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
+  const pathname = usePathname();
 
   // Lock body scroll when menu is open
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
-  const navLinks: NavLink[] = [
-    { name: 'Private Car', href: '/private-car' },
-    { name: 'Warranty', href: '/warranty' },
-    { name: 'Garages', href: '/garages' },
-    { name: 'Resources', href: '/resources' },
+  const navLinks = [
+    { name: 'Private Car', href: '/private-car', icon: Shield },
+    { name: 'Warranty', href: '/warranty', icon: FileText },
+    { name: 'Garages', href: '/garages', icon: Wrench },
+    { name: 'Resources', href: '/resources', icon: ChevronRight },
   ];
 
+  const variants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
-    <>
-      <nav className={`fixed top-0 w-full z-[100] transition-colors duration-500 ${
-        isOpen ? 'bg-transparent' : 'bg-white/80 backdrop-blur-md border-b border-slate-100'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-          
-          <motion.div
-            initial={false}
-            animate={{ opacity: isOpen ? 0 : 1, y: isOpen ? -10 : 0, pointerEvents: isOpen ? 'none' : 'auto' }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="z-[10001]"
-          >
-            <Link href="/" className="text-2xl font-serif font-bold text-emerald-900 tracking-tight">
-              TheInsuranceGuy<span className="text-emerald-500">.</span>
+    // WRAPPER: This tells Framer Motion to load only the DOM animation code (lightweight)
+    <LazyMotion features={domAnimation}>
+      <>
+        <m.nav 
+          initial="hidden"
+          animate="visible"
+          variants={variants}
+          transition={{ duration: 0.5 }}
+          className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200"
+        >
+          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="relative z-50 flex items-center gap-2 group">
+              <span className="text-2xl font-serif font-bold text-slate-900 tracking-tight group-hover:text-emerald-800 transition-colors">
+                TheInsuranceGuy<span className="text-emerald-600">.</span>
+              </span>
             </Link>
-          </motion.div>
-          
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link key={link.name} href={link.href} className="text-sm font-bold text-slate-600 hover:text-emerald-700 transition-colors">
-                {link.name}
-              </Link>
-            ))}
-            <button onClick={() => setShowEmergency(true)} className="bg-red-50 text-red-600 px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-transform">
-              Emergency
+
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-8">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  href={link.href}
+                  className="text-sm font-medium text-slate-600 hover:text-emerald-800 transition-colors"
+                >
+                  {link.name}
+                </Link>
+              ))}
+              
+              <button 
+                onClick={() => setShowEmergency(true)}
+                className="bg-red-50 text-red-600 px-5 py-2.5 rounded-full text-sm font-bold hover:bg-red-100 transition-colors flex items-center gap-2 animate-pulse"
+              >
+                <Phone size={16} /> Emergency
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden relative z-50 p-2 text-slate-800"
+              aria-label="Toggle Menu"
+            >
+              {isOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
+        </m.nav>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="relative z-[10001] flex h-10 w-10 flex-col items-center justify-center bg-transparent md:hidden outline-none"
-            aria-label={isOpen ? "Close Menu" : "Open Menu"} /* FIX: Added aria-label */
-          >
-            <div className="relative w-6 flex items-center justify-center">
-              <motion.span variants={line1Variants} animate={isOpen ? "opened" : "closed"} className="absolute h-[2px] w-6 rounded-full bg-emerald-900" />
-              <motion.span variants={line2Variants} animate={isOpen ? "opened" : "closed"} className="absolute h-[2px] w-6 rounded-full bg-emerald-900" />
-            </div>
-          </button>
-        </div>
-      </nav>
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isOpen && (
+            <m.div
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-40 bg-white md:hidden pt-24 px-6 flex flex-col"
+            >
+              <div className="flex flex-col gap-6">
+                {navLinks.map((link, i) => (
+                  <m.div
+                    key={link.name}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <Link 
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between text-2xl font-serif text-slate-900 border-b border-slate-100 pb-4"
+                    >
+                      <span className="flex items-center gap-3">
+                        <link.icon size={24} className="text-emerald-600" />
+                        {link.name}
+                      </span>
+                      <ChevronRight size={20} className="text-slate-300" />
+                    </Link>
+                  </m.div>
+                ))}
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[90] bg-white flex flex-col pt-32 px-10"
-          >
-            <motion.div variants={listVariants} initial="hidden" animate="visible" className="flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <motion.div key={link.name} variants={itemVariants}>
-                  <Link href={link.href} className="text-[2.5rem] font-serif text-emerald-900 border-b border-slate-100 py-6 flex justify-between items-center" onClick={() => setIsOpen(false)}>
-                    {link.name} <span className="text-lg opacity-20">→</span>
-                  </Link>
-                </motion.div>
-              ))}
-              <motion.button variants={itemVariants} onClick={() => { setIsOpen(false); setShowEmergency(true); }} className="mt-8 text-left text-red-600 font-serif text-3xl">
-                 Emergency Mode
-              </motion.button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <EmergencyModal isOpen={showEmergency} onClose={() => setShowEmergency(false)} />
-    </>
+                <m.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  onClick={() => { setIsOpen(false); setShowEmergency(true); }}
+                  className="mt-4 w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-red-200"
+                >
+                  <Phone size={20} /> Emergency Support
+                </m.button>
+              </div>
+            </m.div>
+          )}
+        </AnimatePresence>
+
+        <EmergencyModal isOpen={showEmergency} onClose={() => setShowEmergency(false)} />
+      </>
+    </LazyMotion>
   );
 };
+
 export default Navbar;

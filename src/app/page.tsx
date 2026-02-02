@@ -4,14 +4,13 @@ import Link from 'next/link';
 import { CircleCheck, Hand, Calendar } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-// FIX 2: Changed to "ssr: false". 
-// This removes the slider from the initial "Main Thread Work", saving ~1 second of load time.
+// CRITICAL SPEED FIX: ssr: false
+// This moves the heavy slider calculation off the "Main Thread"
 const InsiderSlider = dynamic(() => import('@/components/sections/insider-slider'), {
   loading: () => <div className="h-[600px] w-full bg-slate-50 animate-pulse rounded-[32px] mx-auto max-w-6xl mt-8 border border-slate-100" />,
   ssr: false 
 });
 
-// LAZY LOAD: Modal loads only on interaction
 const AppointmentModal = dynamic(() => import('@/components/ui/appointment-modal'), {
   ssr: false
 });
@@ -19,20 +18,17 @@ const AppointmentModal = dynamic(() => import('@/components/ui/appointment-modal
 export default function Home() {
   const [showAppointment, setShowAppointment] = useState(false);
 
-  // SPEED TRICK: Pre-load modal code on hover
   const prefetchModal = () => {
     import('@/components/ui/appointment-modal');
   };
 
   return (
-    // UNIFIED BACKGROUND
     <main className="pt-20 overflow-x-hidden bg-slate-50 min-h-screen">
       
-      {/* --- 1. HERO SECTION --- */}
+      {/* HERO SECTION */}
       <section className="pt-28 pb-16 px-6 text-center relative overflow-hidden">
         <div className="max-w-5xl mx-auto relative z-10">
           
-          {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-emerald-200 cursor-default hover:bg-emerald-200 transition-colors">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
@@ -51,12 +47,10 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {/* PRIMARY: GET QUOTE */}
             <Link href="/diamond-wizard?mode=new" className="w-full sm:w-auto h-14 bg-emerald-800 text-white px-8 rounded-full font-bold text-lg shadow-xl shadow-emerald-900/20 hover:bg-emerald-900 hover:scale-105 hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center">
               Get Quote
             </Link>
             
-            {/* SECONDARY: BOOK APPOINTMENT */}
             <button 
               onClick={() => setShowAppointment(true)} 
               onMouseEnter={prefetchModal} 
@@ -69,10 +63,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- 2. INSIDER SLIDER --- */}
+      {/* INSIDER SLIDER */}
       <InsiderSlider />
 
-      {/* --- 3. BUFFETT QUOTE --- */}
+      {/* BUFFETT QUOTE */}
       <section className="py-20 text-center px-6 relative overflow-visible">
         <div className="max-w-4xl mx-auto relative">
           <span className="absolute -top-10 -left-4 text-[6rem] md:text-[8rem] font-serif opacity-10 text-emerald-900 select-none leading-none">“</span>
@@ -86,19 +80,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- 4. SIERRA SAVINGS TABLE --- */}
+      {/* SIERRA SAVINGS TABLE */}
       <section className="py-10 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-serif text-emerald-900 mb-4 tracking-tight">The Sierra Savings</h2>
             <p className="text-slate-500 font-sans">Verified comparison for Gurgaon Dealer</p>
           </div>
-
           <div className="relative">
               <div className="md:hidden absolute -top-8 right-0 flex items-center gap-1 text-slate-400 text-xs font-bold animate-pulse">
                 <Hand size={14} /> Swipe
               </div>
-
               <div className="overflow-x-auto rounded-[32px] border border-slate-200 bg-white shadow-xl">
                <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
@@ -113,9 +105,7 @@ export default function Home() {
                     <td className="p-8 font-serif text-xl text-emerald-900 font-bold">Total Premium</td>
                     <td className="p-8 text-red-500 font-bold line-through">₹1,09,000</td>
                     <td className="p-8">
-                      <span className="bg-emerald-700 text-white px-5 py-2.5 rounded-full text-xl font-black shadow-lg shadow-emerald-900/20">
-                        ₹58,311
-                      </span>
+                      <span className="bg-emerald-700 text-white px-5 py-2.5 rounded-full text-xl font-black shadow-lg shadow-emerald-900/20">₹58,311</span>
                     </td>
                   </tr>
                   <tr className="border-b border-slate-50">
@@ -137,19 +127,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- 5. REALITY CHECK TABLE --- */}
+      {/* REALITY CHECK TABLE */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-serif text-emerald-900 mb-4">The Reality Check</h2>
             <p className="text-slate-500">Direct comparison based on market realities.</p>
           </div>
-          
           <div className="relative">
               <div className="md:hidden absolute -top-8 right-0 flex items-center gap-1 text-slate-400 text-xs font-bold animate-pulse">
                 <Hand size={14} /> Swipe
               </div>
-
               <div className="overflow-x-auto rounded-[24px] border border-slate-200 bg-white shadow-xl">
                <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
@@ -165,21 +153,18 @@ export default function Home() {
                     <td className="p-6 font-serif text-lg text-emerald-900 font-bold">Transparency</td>
                     <td className="p-6 text-red-500 font-bold">Low</td>
                     <td className="p-6 text-orange-500 font-bold">Medium</td>
-                    {/* CONTRAST FIX: text-emerald-700 -> text-emerald-800 */}
                     <td className="p-6"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">High</span></td>
                   </tr>
                   <tr className="border-b border-slate-50">
                     <td className="p-6 font-serif text-lg text-emerald-900 font-bold">Claim Clarity</td>
                     <td className="p-6 text-red-500 font-bold">Ambiguous</td>
                     <td className="p-6 text-orange-500 font-bold">Ambiguous</td>
-                    {/* CONTRAST FIX: text-emerald-700 -> text-emerald-800 */}
                     <td className="p-6"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">Crystal Clear</span></td>
                   </tr>
                   <tr>
                     <td className="p-6 font-serif text-lg text-emerald-900 font-bold">Sales Pressure</td>
                     <td className="p-6 text-red-500 font-bold">High</td>
                     <td className="p-6 text-orange-500 font-bold">Medium</td>
-                    {/* CONTRAST FIX: text-emerald-700 -> text-emerald-800 */}
                     <td className="p-6"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">Zero</span></td>
                   </tr>
                 </tbody>
@@ -189,7 +174,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- 6. STORY SECTION --- */}
+      {/* STORY SECTION */}
       <section className="my-24 px-6 text-center">
         <div className="max-w-3xl mx-auto bg-emerald-950 text-white rounded-[40px] md:rounded-[60px] p-12 md:p-20 shadow-2xl relative overflow-hidden transform hover:scale-[1.01] transition-transform duration-500">
           <span className="bg-emerald-500 text-emerald-950 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-8 inline-block">My Mistake</span>
@@ -202,7 +187,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- APPOINTMENT MODAL (Lazy Loaded) --- */}
       {showAppointment && (
         <AppointmentModal isOpen={showAppointment} onClose={() => setShowAppointment(false)} />
       )}

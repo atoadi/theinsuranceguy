@@ -7,8 +7,8 @@ import Navbar from "../components/layout/navbar";
 import Footer from "../components/layout/Footer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
-// FIX 1: REMOVED "weight" array. Outfit is a variable font. 
-// Loading just one variable file is 6x faster on mobile than loading 6 weights.
+// FIX 1: VARIABLE FONT (Removed 'weight' array)
+// This makes the font download 6x faster on 4G networks.
 const outfit = Outfit({ 
   subsets: ["latin"], 
   variable: "--font-outfit",
@@ -98,7 +98,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-sans antialiased bg-white text-slate-900 overflow-x-hidden">
-        {/* ANALYTICS ENGINES */}
         <GoogleAnalytics />
         <Analytics />
         
