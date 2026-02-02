@@ -16,6 +16,16 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  // 1. FORCE COMPRESSION (Reduces text file size by ~70%)
+  compress: true, 
+
+  // 2. TREE SHAKING (Prevents loading unused icons/animations)
+  // This is the magic setting that stops Lucide from loading 1000+ icons
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns'],
+  },
+
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
