@@ -4,22 +4,24 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import Navbar from "../components/layout/navbar";
-import Footer from "../components/layout/Footer"; 
-import GoogleAnalytics from "@/components/analytics/GoogleAnalytics"; // Make sure you created this in Package 4
+import Footer from "../components/layout/Footer";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
+// FIX 1: Add 'swap' to prevent render blocking
 const outfit = Outfit({ 
   subsets: ["latin"], 
   variable: "--font-outfit",
-  weight: ["300", "400", "500", "600", "700", "800"] 
+  weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap" 
 });
 
 const playfair = Playfair_Display({ 
   subsets: ["latin"], 
   variable: "--font-playfair",
-  style: ["normal", "italic"] 
+  style: ["normal", "italic"],
+  display: "swap"
 });
 
-// --- MILLION DOLLAR SEO CONFIGURATION ---
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.theinsuranceguy.in'), 
   title: {
@@ -99,13 +101,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ANALYTICS ENGINES */}
         <GoogleAnalytics />
         <Analytics />
-        <SpeedInsights />
+        
+        {/* FIX 2: REMOVED DUPLICATE SpeedInsights here, keeping only the one at bottom */}
         
         <Navbar />
         <main className="min-h-screen">
           {children}
         </main>
         <Footer />
+        <SpeedInsights />
       </body>
     </html>
   );

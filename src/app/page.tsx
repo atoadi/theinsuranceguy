@@ -1,12 +1,27 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import InsiderSlider from '@/components/sections/insider-slider';
-import AppointmentModal from '@/components/ui/appointment-modal';
 import { CircleCheck, Hand, Calendar } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// LAZY LOAD: Slider loads only when needed
+const InsiderSlider = dynamic(() => import('@/components/sections/insider-slider'), {
+  loading: () => <div className="h-[600px] w-full bg-slate-50 animate-pulse rounded-[32px] mx-auto max-w-6xl mt-8 border border-slate-100" />,
+  ssr: true 
+});
+
+// LAZY LOAD: Modal loads only on interaction
+const AppointmentModal = dynamic(() => import('@/components/ui/appointment-modal'), {
+  ssr: false
+});
 
 export default function Home() {
   const [showAppointment, setShowAppointment] = useState(false);
+
+  // SPEED TRICK: Pre-load modal code on hover
+  const prefetchModal = () => {
+    import('@/components/ui/appointment-modal');
+  };
 
   return (
     // UNIFIED BACKGROUND
@@ -40,9 +55,10 @@ export default function Home() {
               Get Quote
             </Link>
             
-            {/* SECONDARY: BOOK APPOINTMENT (PC Feeling Fixed) */}
+            {/* SECONDARY: BOOK APPOINTMENT */}
             <button 
               onClick={() => setShowAppointment(true)} 
+              onMouseEnter={prefetchModal} 
               className="w-full sm:w-auto h-14 bg-white border-2 border-slate-200 text-emerald-900 px-8 rounded-full font-bold text-lg hover:border-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 hover:shadow-lg hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
               <Calendar size={20} className="text-emerald-600 group-hover:scale-110 transition-transform" />
@@ -78,12 +94,12 @@ export default function Home() {
           </div>
 
           <div className="relative">
-             <div className="md:hidden absolute -top-8 right-0 flex items-center gap-1 text-slate-400 text-xs font-bold animate-pulse">
-               <Hand size={14} /> Swipe
-             </div>
+              <div className="md:hidden absolute -top-8 right-0 flex items-center gap-1 text-slate-400 text-xs font-bold animate-pulse">
+                <Hand size={14} /> Swipe
+              </div>
 
-             <div className="overflow-x-auto rounded-[32px] border border-slate-200 bg-white shadow-xl">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+              <div className="overflow-x-auto rounded-[32px] border border-slate-200 bg-white shadow-xl">
+               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     <th className="p-8 text-[10px] font-black uppercase tracking-widest text-slate-400">Policy Segment</th>
@@ -129,12 +145,12 @@ export default function Home() {
           </div>
           
           <div className="relative">
-             <div className="md:hidden absolute -top-8 right-0 flex items-center gap-1 text-slate-400 text-xs font-bold animate-pulse">
-               <Hand size={14} /> Swipe
-             </div>
+              <div className="md:hidden absolute -top-8 right-0 flex items-center gap-1 text-slate-400 text-xs font-bold animate-pulse">
+                <Hand size={14} /> Swipe
+              </div>
 
-             <div className="overflow-x-auto rounded-[24px] border border-slate-200 bg-white shadow-xl">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+              <div className="overflow-x-auto rounded-[24px] border border-slate-200 bg-white shadow-xl">
+               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-400">Evaluation Point</th>
@@ -148,19 +164,22 @@ export default function Home() {
                     <td className="p-6 font-serif text-lg text-emerald-900 font-bold">Transparency</td>
                     <td className="p-6 text-red-500 font-bold">Low</td>
                     <td className="p-6 text-orange-500 font-bold">Medium</td>
-                    <td className="p-6"><span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">High</span></td>
+                    {/* CONTRAST FIX: text-emerald-700 -> text-emerald-800 */}
+                    <td className="p-6"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">High</span></td>
                   </tr>
                   <tr className="border-b border-slate-50">
                     <td className="p-6 font-serif text-lg text-emerald-900 font-bold">Claim Clarity</td>
                     <td className="p-6 text-red-500 font-bold">Ambiguous</td>
                     <td className="p-6 text-orange-500 font-bold">Ambiguous</td>
-                    <td className="p-6"><span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">Crystal Clear</span></td>
+                    {/* CONTRAST FIX: text-emerald-700 -> text-emerald-800 */}
+                    <td className="p-6"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">Crystal Clear</span></td>
                   </tr>
                   <tr>
                     <td className="p-6 font-serif text-lg text-emerald-900 font-bold">Sales Pressure</td>
                     <td className="p-6 text-red-500 font-bold">High</td>
                     <td className="p-6 text-orange-500 font-bold">Medium</td>
-                    <td className="p-6"><span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">Zero</span></td>
+                    {/* CONTRAST FIX: text-emerald-700 -> text-emerald-800 */}
+                    <td className="p-6"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">Zero</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -169,7 +188,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- 6. STORY SECTION (Fixed Placement) --- */}
+      {/* --- 6. STORY SECTION --- */}
       <section className="my-24 px-6 text-center">
         <div className="max-w-3xl mx-auto bg-emerald-950 text-white rounded-[40px] md:rounded-[60px] p-12 md:p-20 shadow-2xl relative overflow-hidden transform hover:scale-[1.01] transition-transform duration-500">
           <span className="bg-emerald-500 text-emerald-950 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-8 inline-block">My Mistake</span>
@@ -182,8 +201,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- APPOINTMENT MODAL (Invisible until clicked) --- */}
-      <AppointmentModal isOpen={showAppointment} onClose={() => setShowAppointment(false)} />
+      {/* --- APPOINTMENT MODAL (Lazy Loaded) --- */}
+      {showAppointment && (
+        <AppointmentModal isOpen={showAppointment} onClose={() => setShowAppointment(false)} />
+      )}
     </main>
   );
 }
