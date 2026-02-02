@@ -40,7 +40,8 @@ export default function InsiderSlider() {
           <p className="text-slate-500 text-sm">Real quotes vs Dealer quotes.</p>
         </div>
 
-        <div className="relative">
+        {/* --- CLS FIX: Added min-h to prevent collapse during transition --- */}
+        <div className="relative min-h-[600px] md:min-h-[450px]">
           <AnimatePresence mode="wait">
             
             <motion.div
@@ -49,16 +50,18 @@ export default function InsiderSlider() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="grid md:grid-cols-2 gap-8 items-center"
+              className="grid md:grid-cols-2 gap-8 items-center absolute w-full top-0 left-0"
             >
-              {/* IMAGE SIDE - Transparent & Rounded */}
-              <div className="relative h-[250px] md:h-[400px] rounded-[32px] overflow-hidden shadow-2xl">
+              {/* IMAGE SIDE */}
+              <div className="relative h-[250px] md:h-[400px] rounded-[32px] overflow-hidden shadow-2xl bg-slate-100">
                 <Image 
                   src={CARS[index].image} 
                   alt={CARS[index].name} 
                   fill
+                  /* --- PERFORMANCE FIX: Added sizes to stop Preload Warning --- */
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
-                  priority 
+                  priority={true} 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute bottom-6 left-6 text-white">
@@ -91,7 +94,6 @@ export default function InsiderSlider() {
                   ))}
                 </div>
 
-                {/* --- RESTORED MINIMALIST BUTTON --- */}
                 <button onClick={nextSlide} className="group flex items-center gap-3 text-emerald-900 font-bold hover:gap-5 transition-all">
                   Next Vehicle 
                   <div className="w-12 h-12 rounded-full border border-emerald-200 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-white transition-colors bg-white shadow-sm">

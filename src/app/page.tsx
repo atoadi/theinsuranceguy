@@ -25,7 +25,7 @@ export default function Home() {
             Sierra Launch Offer: 2,000 Slots
           </div>
           
-          <h1 className="text-5xl md:text-8xl font-serif text-slate-900 leading-[1.1] mb-6 tracking-tight">
+          <h1 className="text-5xl md:text-8xl font-serif text-slate-900 leading-[1.1] mb-6 tracking-tight min-h-[3.3em] md:min-h-[2.2em] flex flex-col justify-center">
             Your Dealer Quote is <br />
             <span className="text-emerald-700 italic">Overpriced.</span> <span className="text-orange-600 underline decoration-orange-200 italic">Check the Math.</span>
           </h1>
