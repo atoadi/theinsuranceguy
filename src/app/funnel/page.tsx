@@ -3,8 +3,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, CheckCircle, Car, ShieldCheck, RefreshCw, ClipboardCheck } from 'lucide-react';
+// IMPORT the action from your project to stop the red lines
+import { sendTelegramLead } from '@/app/actions';
 
-// 1. CONFIGURATION
+// 1. CONFIGURATION: Your exact data preserved
 const FUNNEL_DATA = {
   new: { title: "New Car Protection", q1: "Expected Delivery Date?", q2: "Showroom Price (IDV)?", icon: <Car /> },
   used: { title: "Used Car History", q1: "Registration Number?", q2: "Current Odometer (KMs)?", icon: <ClipboardCheck /> },
@@ -12,17 +14,15 @@ const FUNNEL_DATA = {
   warranty: { title: "Extended Warranty", q1: "Year of Manufacture?", q2: "Engine CC / Model?", icon: <ShieldCheck /> }
 };
 
-// --- PART 1: THE LOGIC COMPONENT ---
 function FunnelContent() {
   const searchParams = useSearchParams();
   const initialType = searchParams.get('type') as keyof typeof FUNNEL_DATA | null;
 
-  // State Management
+  // State Management - Added 'rto' here to ensure it's never lost
   const [step, setStep] = useState(initialType ? 1 : 0);
   const [flow, setFlow] = useState<keyof typeof FUNNEL_DATA | null>(initialType);
-  const [formData, setFormData] = useState({ q1: '', q2: '', name: '', phone: '' });
+  const [formData, setFormData] = useState({ q1: '', q2: '', name: '', phone: '', rto: '' });
 
-  // Reset if the URL changes
   useEffect(() => { 
     if (initialType && FUNNEL_DATA[initialType]) { 
       setFlow(initialType); 
@@ -32,17 +32,31 @@ function FunnelContent() {
 
   const handleNext = () => setStep((s) => s + 1);
 
-  // 2. TELEGRAM INTEGRATION
-  const submitToTelegram = async () => {
+  // 2. INTEGRATED SUBMISSION (TELEGRAM + SUPABASE)
+  const handleSubmitFinal = async () => {
     if (!flow) return;
-    const message = `🚀 *New Lead: ${flow.toUpperCase()}*\n\n` +
-                    `👤 Name: ${formData.name}\n` +
-                    `📞 Phone: ${formData.phone}\n` +
-                    `📋 ${FUNNEL_DATA[flow].q1}: ${formData.q1}\n` +
-                    `💰 ${FUNNEL_DATA[flow].q2}: ${formData.q2}`;
-    console.log("Sending to Telegram:", message);
-    // Ideally call your server action here
-    setStep(4);
+
+    // We capture RTO if it's the 'used' car flow (q1) or if provided
+    const capturedRto = flow === 'used' ? formData.q1 : (formData.rto || 'N/A');
+
+    // Build the payload for your actions.ts
+    const payload = {
+      email: `${formData.phone}@theinsuranceguy.in`, // Fallback email
+      whatsapp: formData.phone,
+      makeModel: flow,
+      variant: `Q1: ${formData.q1} | Q2: ${formData.q2}`,
+      budget: 0,
+      mode: flow,
+      rto: capturedRto // Sending the RTO properly now!
+    };
+
+    try {
+      await sendTelegramLead(payload);
+      setStep(4);
+    } catch (error) {
+      console.error("Submission Error:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -74,7 +88,8 @@ function FunnelContent() {
             </h2>
             <input 
               autoFocus
-              className="w-full p-4 rounded-xl border border-slate-200 mb-6 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full p-4 rounded-xl border border-slate-200 mb-6 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
+              value={step === 1 ? formData.q1 : formData.q2}
               onChange={(e) => setFormData({ ...formData, [step === 1 ? 'q1' : 'q2']: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && handleNext()}
             />
@@ -88,9 +103,9 @@ function FunnelContent() {
         {step === 3 && (
           <motion.div key="contact" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-10 rounded-[32px] shadow-xl border border-slate-100">
             <h2 className="text-2xl font-serif text-slate-900 mb-6">Where should we send your quote?</h2>
-            <input placeholder="Full Name" className="w-full p-4 rounded-xl border border-slate-200 mb-4 outline-none focus:ring-2 focus:ring-emerald-500" onChange={(e) => setFormData({...formData, name: e.target.value})} />
-            <input placeholder="Phone Number" className="w-full p-4 rounded-xl border border-slate-200 mb-6 outline-none focus:ring-2 focus:ring-emerald-500" onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-            <button onClick={submitToTelegram} className="w-full bg-emerald-900 text-white font-bold py-4 rounded-xl">Confirm & Submit</button>
+            <input placeholder="Full Name" className="w-full p-4 rounded-xl border border-slate-200 mb-4 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900" onChange={(e) => setFormData({...formData, name: e.target.value})} />
+            <input placeholder="Phone Number" className="w-full p-4 rounded-xl border border-slate-200 mb-6 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900" onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+            <button onClick={handleSubmitFinal} className="w-full bg-emerald-900 text-white font-bold py-4 rounded-xl">Confirm & Submit</button>
           </motion.div>
         )}
 
@@ -108,7 +123,6 @@ function FunnelContent() {
   );
 }
 
-// --- PART 2: THE WRAPPER COMPONENT ---
 export default function SmartFunnelPage() {
   return (
     <main className="min-h-screen bg-slate-50 pt-32 pb-20 px-6">

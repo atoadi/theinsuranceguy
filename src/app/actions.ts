@@ -59,7 +59,8 @@ export async function sendTelegramLead(data: any) {
           make_model: data.makeModel,
           variant: data.variant,
           budget: String(data.budget),
-          mode: data.mode
+          mode: data.mode,
+          rto: data.rto // FIX: Added RTO column to Supabase insert
         }
       ])
       
@@ -72,6 +73,7 @@ export async function sendTelegramLead(data: any) {
 --------------------------
 📧 *Email:* ${data.email}
 📱 *Whatsapp:* ${data.whatsapp || 'Not provided'} 
+📍 *RTO:* ${data.rto || 'N/A'} 
 🚗 *Model:* ${data.makeModel}
 ⚙️ *Variant:* ${data.variant}
 💰 *Budget:* ₹${data.budget}
@@ -106,8 +108,6 @@ export async function getGarages(city: string, brand: string, searchTerm: string
   } catch (err) { return []; }
 }
 
-// ... (Your existing imports and code above) ...
-
 // --- 3. UPDATED: SECURE AVAILABILITY CHECK ---
 export async function getTakenSlots(date: string) {
   try {
@@ -132,8 +132,6 @@ export async function getTakenSlots(date: string) {
     return [];
   }
 }
-
-// ... (Your saveAppointment code below remains exactly the same) ...
 
 // --- 4. NEW: SAVE APPOINTMENT (With Firewall & Full Logic) ---
 export async function saveAppointment(data: any) {
