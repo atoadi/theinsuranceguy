@@ -12,7 +12,7 @@ export default function GoogleAnalytics() {
     <>
       <Script
         strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=G-${GA_MEASUREMENT_ID}`} // REPLACE THIS
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} // REPLACE THIS
       />
       <Script
         id="google-analytics"
