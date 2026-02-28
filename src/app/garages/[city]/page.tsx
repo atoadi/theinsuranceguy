@@ -1,6 +1,5 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldCheck, MapPin, Phone, ChevronRight, Calendar } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
@@ -228,7 +227,6 @@ export default async function CityGaragePage({ params }: Props) {
               </Link>
               <Link
                 href="/"
-                onClick={() => { }}
                 className="inline-flex items-center justify-center gap-2 bg-white/10 text-white px-8 py-4 rounded-full font-bold text-base hover:bg-white/20 transition-all border border-white/20"
               >
                 <Calendar size={16} /> Book Consultation
