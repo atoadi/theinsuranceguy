@@ -15,6 +15,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${post.title} | TheInsuranceGuy`,
     description: post.excerpt,
+    alternates: {
+      canonical: `https://www.theinsuranceguy.in/resources/${slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
@@ -44,16 +47,39 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const currentIndex = BLOG_POSTS.indexOf(post);
   const nextPost = BLOG_POSTS[(currentIndex + 1) % BLOG_POSTS.length];
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    dateModified: post.date,
+    author: [{ '@type': 'Person', name: 'TheInsuranceGuy', url: 'https://www.theinsuranceguy.in' }],
+    publisher: {
+      '@type': 'Organization',
+      name: 'TheInsuranceGuy',
+      url: 'https://www.theinsuranceguy.in',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://www.theinsuranceguy.in/resources/${post.slug}`,
+    },
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 pt-24 pb-20">
-      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* READING PROGRESS BAR */}
       <div className="fixed top-20 left-0 w-full h-1 bg-slate-200 z-40">
-        <div className="h-full bg-emerald-600 w-1/3" /> 
+        <div className="h-full bg-emerald-600 w-1/3" />
       </div>
 
       <article className="max-w-3xl mx-auto px-6">
-        
+
         {/* BACK LINK */}
         <Link href="/resources" className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-emerald-700 mb-8 transition-colors">
           <ArrowLeft size={16} /> Back to Hub
@@ -72,18 +98,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <Clock size={12} /> {post.readTime}
             </span>
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-serif text-emerald-900 leading-[1.1] mb-8">
             {post.title}
           </h1>
-          
+
           <p className="text-xl text-slate-500 leading-relaxed border-l-4 border-emerald-500 pl-6 italic">
             {post.excerpt}
           </p>
         </header>
 
         {/* CONTENT ENGINE */}
-        <div 
+        <div
           className="prose prose-lg prose-slate max-w-none 
             prose-headings:font-serif prose-headings:text-emerald-950 
             prose-p:text-slate-600 prose-p:leading-8
@@ -91,7 +117,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             prose-strong:text-emerald-800 prose-strong:font-black
             prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline
             marker:text-emerald-500"
-          dangerouslySetInnerHTML={{ __html: post.content }} 
+          dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
         {/* --- SHARE BUTTONS --- */}
@@ -102,7 +128,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* --- READ NEXT SECTION (Border Removed to fix line issue) --- */}
       <section className="max-w-3xl mx-auto px-6 pt-16">
         <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Read This Next</p>
-        <Link 
+        <Link
           href={`/resources/${nextPost.slug}`}
           className="group block bg-white rounded-3xl p-8 border border-slate-200 hover:border-emerald-500 hover:shadow-premium transition-all"
         >
@@ -123,31 +149,31 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* --- PREMIUM CTA CARD (Replaces IG No Spam) --- */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto bg-emerald-900 rounded-[40px] p-12 text-center text-white relative overflow-hidden shadow-2xl">
-           
-           {/* Background Glow Effect */}
-           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-           <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/20 blur-[100px] rounded-full pointer-events-none" />
 
-           <div className="relative z-10">
-             <div className="inline-flex p-3 bg-white/10 backdrop-blur-sm text-emerald-300 rounded-full mb-6">
-               <ShieldCheck size={32} />
-             </div>
-             
-             <h2 className="text-3xl md:text-5xl font-serif mb-6 leading-tight">
-               Don't wait for a claim rejection.
-             </h2>
-             
-             <p className="text-emerald-100/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-               We analyze your specific policy wording to find the hidden clauses before they cost you money.
-             </p>
+          {/* Background Glow Effect */}
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/20 blur-[100px] rounded-full pointer-events-none" />
 
-             <Link 
-               href="/diamond-wizard?mode=new" 
-               className="inline-flex items-center gap-2 bg-white text-emerald-900 px-10 py-5 rounded-full font-bold text-lg hover:bg-emerald-50 hover:-translate-y-1 transition-all shadow-xl"
-             >
-               Get Quote <ChevronRight size={18} />
-             </Link>
-           </div>
+          <div className="relative z-10">
+            <div className="inline-flex p-3 bg-white/10 backdrop-blur-sm text-emerald-300 rounded-full mb-6">
+              <ShieldCheck size={32} />
+            </div>
+
+            <h2 className="text-3xl md:text-5xl font-serif mb-6 leading-tight">
+              Don't wait for a claim rejection.
+            </h2>
+
+            <p className="text-emerald-100/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+              We analyze your specific policy wording to find the hidden clauses before they cost you money.
+            </p>
+
+            <Link
+              href="/diamond-wizard?mode=new"
+              className="inline-flex items-center gap-2 bg-white text-emerald-900 px-10 py-5 rounded-full font-bold text-lg hover:bg-emerald-50 hover:-translate-y-1 transition-all shadow-xl"
+            >
+              Get Quote <ChevronRight size={18} />
+            </Link>
+          </div>
         </div>
       </section>
 

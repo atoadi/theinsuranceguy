@@ -7,11 +7,11 @@ import Navbar from "../components/layout/navbar";
 import Footer from "../components/layout/Footer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
-// FIX 1: VARIABLE FONT (Removed 'weight' array)
-// This makes the font download 6x faster on 4G networks.
+// FIX 1: Add 'swap' to prevent render blocking
 const outfit = Outfit({ 
   subsets: ["latin"], 
   variable: "--font-outfit",
+  weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap" 
 });
 
@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link 
           rel="stylesheet" 
-          
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
         />
@@ -98,8 +98,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-sans antialiased bg-white text-slate-900 overflow-x-hidden">
+        {/* ANALYTICS ENGINES */}
         <GoogleAnalytics />
         <Analytics />
+        
+        {/* FIX 2: REMOVED DUPLICATE SpeedInsights here, keeping only the one at bottom */}
         
         <Navbar />
         <main className="min-h-screen">
