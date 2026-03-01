@@ -3,14 +3,31 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Calendar, Tag, ChevronRight, ShieldCheck } from 'lucide-react';
-import { BLOG_POSTS } from '@/data/blogs';
+import { createClient } from '@supabase/supabase-js';
 import ShareButtons from '@/components/ui/ShareButtons';
+
+const getSupabase = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+};
+
+export const revalidate = 60; // ISR
 
 // 1. DYNAMIC METADATA
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = BLOG_POSTS.find((p) => p.slug === slug);
-  if (!post) return { title: 'Article Not Found' };
+  const supabase = getSupabase();
+  if (!supabase) return { title: 'Article Not Found' };
+
+  const { data: post } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (!post || !post.is_published) return { title: 'Article Not Found' };
 
   return {
     title: `${post.title} | TheInsuranceGuy`,
@@ -22,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      publishedTime: post.date,
+      publishedTime: post.published_date,
       authors: ['TheInsuranceGuy'],
     },
   };
@@ -30,7 +47,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 // 2. STATIC PARAMS
 export async function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('blogs')
+    .select('slug')
+    .eq('is_published', true);
+
+  return (data || []).map((post) => ({
     slug: post.slug,
   }));
 }
@@ -38,22 +63,40 @@ export async function generateStaticParams() {
 // 3. THE PAGE COMPONENT
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = BLOG_POSTS.find((p) => p.slug === slug);
+  const supabase = getSupabase();
+  if (!supabase) notFound();
 
-  if (!post) {
+  // Fetch current post
+  const { data: post } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (!post || !post.is_published) {
     notFound();
   }
 
-  const currentIndex = BLOG_POSTS.indexOf(post);
-  const nextPost = BLOG_POSTS[(currentIndex + 1) % BLOG_POSTS.length];
+  // Fetch "Read This Next" post
+  const { data: allPosts } = await supabase
+    .from('blogs')
+    .select('slug, title, excerpt')
+    .eq('is_published', true)
+    .order('created_at', { ascending: false });
+
+  let nextPost = null;
+  if (allPosts && allPosts.length > 1) {
+    const currentIndex = allPosts.findIndex((p) => p.slug === slug);
+    nextPost = allPosts[(currentIndex + 1) % allPosts.length];
+  }
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.excerpt,
-    datePublished: post.date,
-    dateModified: post.date,
+    datePublished: post.published_date,
+    dateModified: post.updated_at,
     author: [{ '@type': 'Person', name: 'TheInsuranceGuy', url: 'https://www.theinsuranceguy.in' }],
     publisher: {
       '@type': 'Organization',
@@ -88,14 +131,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* HEADER */}
         <header className="mb-12">
           <div className="flex flex-wrap gap-4 items-center mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">
-            <span className={`px-3 py-1 rounded-md text-emerald-800 bg-emerald-100 flex items-center gap-1.5`}>
+            <span className={`px-3 py-1 rounded-md text-${post.tag_color || 'slate'}-800 bg-${post.tag_color || 'slate'}-100 flex items-center gap-1.5`}>
               <Tag size={12} /> {post.tag}
             </span>
             <span className="flex items-center gap-1.5">
-              <Calendar size={12} /> {post.date}
+              <Calendar size={12} /> {post.published_date}
             </span>
             <span className="flex items-center gap-1.5">
-              <Clock size={12} /> {post.readTime}
+              <Clock size={12} /> {post.read_time}
             </span>
           </div>
 
@@ -125,28 +168,30 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       </article>
 
-      {/* --- READ NEXT SECTION (Border Removed to fix line issue) --- */}
-      <section className="max-w-3xl mx-auto px-6 pt-16">
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Read This Next</p>
-        <Link
-          href={`/resources/${nextPost.slug}`}
-          className="group block bg-white rounded-3xl p-8 border border-slate-200 hover:border-emerald-500 hover:shadow-premium transition-all"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-2xl font-serif text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">
-                {nextPost.title}
-              </h3>
-              <p className="text-slate-500 line-clamp-2">{nextPost.excerpt}</p>
+      {/* --- READ NEXT SECTION --- */}
+      {nextPost && (
+        <section className="max-w-3xl mx-auto px-6 pt-16">
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Read This Next</p>
+          <Link
+            href={`/resources/${nextPost.slug}`}
+            className="group block bg-white rounded-3xl p-8 border border-slate-200 hover:border-emerald-500 hover:shadow-premium transition-all"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-2xl font-serif text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">
+                  {nextPost.title}
+                </h3>
+                <p className="text-slate-500 line-clamp-2">{nextPost.excerpt}</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0 ml-4">
+                <ChevronRight size={20} />
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0 ml-4">
-              <ChevronRight size={20} />
-            </div>
-          </div>
-        </Link>
-      </section>
+          </Link>
+        </section>
+      )}
 
-      {/* --- PREMIUM CTA CARD (Replaces IG No Spam) --- */}
+      {/* --- PREMIUM CTA CARD --- */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto bg-emerald-900 rounded-[40px] p-12 text-center text-white relative overflow-hidden shadow-2xl">
 

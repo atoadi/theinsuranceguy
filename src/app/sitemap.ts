@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next';
-import { BLOG_POSTS } from '@/data/blogs';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -25,10 +24,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  const { data: blogs } = await supabase.from('blogs').select('slug, updated_at').eq('is_published', true);
+
   // 3. BLOG URL GENERATION
-  const blogUrls = BLOG_POSTS.map((post) => ({
+  const blogUrls = (blogs || []).map((post) => ({
     url: `${baseUrl}/resources/${post.slug}`,
-    lastModified: new Date(),
+    lastModified: new Date(post.updated_at || new Date()),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }));

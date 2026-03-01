@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@supabase/supabase-js'
+import { notifyAdmin } from '@/lib/push'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,13 +20,13 @@ function generateCalendarLinks(event: any) {
 
   // 2. Format Times for URLs (YYYYMMDDTHHMMSS)
   const dateClean = event.date.replace(/-/g, '');
-  
+
   const formatTime = (h: number, m: number) => {
     return String(h).padStart(2, '0') + String(m).padStart(2, '0') + '00';
   };
 
   const startTime = formatTime(hours, minutes);
-  
+
   // Add 20 minutes for End Time
   let endHours = hours;
   let endMinutes = minutes + 20;
@@ -38,7 +39,7 @@ function generateCalendarLinks(event: any) {
 
   // 3. Create Links (Using "TEMPLATE" action for floating time)
   const googleLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${dateClean}T${startTime}/${dateClean}T${endTime}`;
-  
+
   // ISO format for Outlook
   const startIso = `${event.date}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
   const endIso = `${event.date}T${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}:00`;
@@ -53,9 +54,9 @@ export async function sendTelegramLead(data: any) {
     const { error: supabaseError } = await supabase
       .from('leads')
       .insert([
-        { 
-          email: data.email, 
-          whatsapp: data.whatsapp || 'None', 
+        {
+          email: data.email,
+          whatsapp: data.whatsapp || 'None',
           make_model: data.makeModel,
           variant: data.variant,
           budget: String(data.budget),
@@ -63,7 +64,7 @@ export async function sendTelegramLead(data: any) {
           rto: data.rto // FIX: Added RTO column to Supabase insert
         }
       ])
-      
+
     if (supabaseError) throw supabaseError;
 
     const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -89,6 +90,12 @@ export async function sendTelegramLead(data: any) {
       }),
     });
 
+    // Web Push
+    console.log('[Actions] Triggering Push Notification for Lead...');
+    await notifyAdmin('🚨 New Quote Request', `${data.makeModel} - Budget: ₹${data.budget}`).catch(err => {
+      console.error('[Actions] Push Notification failed:', err);
+    });
+
     return { success: true };
   } catch (err) {
     console.error("Submission Error:", err);
@@ -100,8 +107,8 @@ export async function sendTelegramLead(data: any) {
 export async function getGarages(city: string, brand: string, searchTerm: string) {
   try {
     let query = supabase.from('garages').select('*').limit(50);
-    if (city) query = query.ilike('c', city); 
-    if (brand) query = query.ilike('b', brand); 
+    if (city) query = query.ilike('c', city);
+    if (brand) query = query.ilike('b', brand);
     if (searchTerm) query = query.or(`n.ilike.%${searchTerm}%,c.ilike.%${searchTerm}%,a.ilike.%${searchTerm}%`);
     const { data } = await query;
     return data || [];
@@ -112,11 +119,11 @@ export async function getGarages(city: string, brand: string, searchTerm: string
 export async function getTakenSlots(date: string) {
   try {
     // OLD WAY (Blocked): await supabase.from('appointments').select(...)
-    
+
     // NEW WAY (Secure): Call the Postgres Function (RPC)
     // This asks the database to run the "Black Box" function we just made
-    const { data, error } = await supabase.rpc('get_booked_slots', { 
-      check_date: date 
+    const { data, error } = await supabase.rpc('get_booked_slots', {
+      check_date: date
     });
 
     if (error) {
@@ -148,8 +155,8 @@ export async function saveAppointment(data: any) {
           category: data.category,
           identity: data.identity,
           description: data.description,
-          appointment_date: data.date, 
-          appointment_slot: data.slot, 
+          appointment_date: data.date,
+          appointment_slot: data.slot,
           status: 'pending'
         }
       ]);
@@ -162,7 +169,7 @@ export async function saveAppointment(data: any) {
       if (error.code === '23505') {
         return { success: false, error: "Slot unavailable" };
       }
-      throw error; 
+      throw error;
     }
 
     // ---------------------------------------------------------
@@ -171,7 +178,7 @@ export async function saveAppointment(data: any) {
     const { googleLink, outlookLink } = generateCalendarLinks(data);
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    
+
     const message = `
 📅 <b>New Booking Confirmed</b>
 -----------------------------
@@ -195,6 +202,12 @@ export async function saveAppointment(data: any) {
         parse_mode: 'HTML',
         disable_web_page_preview: true
       }),
+    });
+
+    // Web Push
+    console.log('[Actions] Triggering Push Notification for Appointment...');
+    await notifyAdmin('📅 New Consultation', `${data.name} booked for ${data.date} at ${data.slot}`).catch(err => {
+      console.error('[Actions] Push Notification failed:', err);
     });
 
     return { success: true };
