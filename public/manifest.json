@@ -1,0 +1,22 @@
+{
+  "name": "TheInsuranceGuy Command Centre",
+  "short_name": "CommandCentre",
+  "description": "Admin Dashboard for TheInsuranceGuy",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#022c22",
+  "theme_color": "#022c22",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

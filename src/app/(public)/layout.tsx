@@ -2,28 +2,28 @@ import type { Metadata } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import "./globals.css";
-import Navbar from "../components/layout/navbar";
-import Footer from "../components/layout/Footer";
+import "../globals.css";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/Footer";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 // FIX 1: Add 'swap' to prevent render blocking
-const outfit = Outfit({ 
-  subsets: ["latin"], 
+const outfit = Outfit({
+  subsets: ["latin"],
   variable: "--font-outfit",
   weight: ["300", "400", "500", "600", "700", "800"],
-  display: "swap" 
+  display: "swap"
 });
 
-const playfair = Playfair_Display({ 
-  subsets: ["latin"], 
+const playfair = Playfair_Display({
+  subsets: ["latin"],
   variable: "--font-playfair",
   style: ["normal", "italic"],
   display: "swap"
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.theinsuranceguy.in'), 
+  metadataBase: new URL('https://www.theinsuranceguy.in'),
   title: {
     default: "TheInsuranceGuy | Expert Car Insurance Advisory India",
     template: "%s | TheInsuranceGuy"
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     siteName: "TheInsuranceGuy",
     images: [
       {
-        url: "/og-image.jpg", 
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "TheInsuranceGuy Dashboard",
@@ -86,12 +86,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${outfit.variable} ${playfair.variable}`}>
       <head>
-        <link 
-          rel="stylesheet" 
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -101,9 +95,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ANALYTICS ENGINES */}
         <GoogleAnalytics />
         <Analytics />
-        
+
         {/* FIX 2: REMOVED DUPLICATE SpeedInsights here, keeping only the one at bottom */}
-        
+
         <Navbar />
         <main className="min-h-screen">
           {children}

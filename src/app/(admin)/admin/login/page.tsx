@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ShieldCheck, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { loginAction } from '@/app/admin/login/actions';
+import { loginAction } from '@/app/(admin)/admin/login/actions';
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState('');

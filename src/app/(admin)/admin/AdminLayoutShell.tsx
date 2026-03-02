@@ -10,9 +10,6 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
     if (isLoginPage) {
         return (
             <>
-                <style>{`
-                  nav[class*="fixed"], footer { display: none !important; }
-                `}</style>
                 {children}
             </>
         );
@@ -20,15 +17,6 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
 
     return (
         <>
-            {/*
-        Hide the public site's Navbar + Footer.
-        The root layout.tsx renders them globally — instead of modifying it,
-        we inject CSS to suppress them when inside /admin.
-      */}
-            <style>{`
-        nav[class*="fixed"], footer { display: none !important; }
-      `}</style>
-
             <div className="fixed inset-0 z-50 flex bg-slate-50/80">
                 <Sidebar />
 
