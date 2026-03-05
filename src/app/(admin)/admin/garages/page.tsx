@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import GarageListClient from '@/components/admin/GarageListClient';
 import GarageUploadClient from '@/components/admin/GarageUploadClient';
+import { Suspense } from 'react';
 
 const getSupabase = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,13 +19,8 @@ async function uploadGarages(garages: any[]) {
     if (!supabase || !garages.length) return { success: false, error: 'Invalid data' };
 
     try {
-        // Supabase can insert an array of objects directly in one request
-        const { error } = await supabase
-            .from('garages')
-            .insert(garages);
-
+        const { error } = await supabase.from('garages').insert(garages);
         let count = garages.length;
-
         if (error) throw error;
 
         revalidatePath('/admin/garages');
@@ -44,21 +40,13 @@ async function saveGarage(data: any) {
 
     try {
         if (data.id) {
-            // Update
             const { error } = await supabase.from('garages').update({
-                n: data.n,
-                b: data.b,
-                c: data.c,
-                a: data.a
+                n: data.n, b: data.b, c: data.c, a: data.a
             }).eq('id', data.id);
             if (error) throw error;
         } else {
-            // Insert
             const { error } = await supabase.from('garages').insert([{
-                n: data.n,
-                b: data.b,
-                c: data.c,
-                a: data.a
+                n: data.n, b: data.b, c: data.c, a: data.a
             }]);
             if (error) throw error;
         }
@@ -91,7 +79,7 @@ async function deleteGarages(ids: string[]) {
     }
 }
 
-export default async function AdminGaragesPage() {
+async function GaragesData() {
     const supabase = getSupabase();
     let garages: any[] = [];
     let totalCount = 0;
@@ -101,8 +89,7 @@ export default async function AdminGaragesPage() {
             .from('garages')
             .select('id, n, b, c, a', { count: 'exact' })
             .order('n', { ascending: true })
-            // fetching top 500 for the client to handle, preventing massive payload
-            .limit(500);
+            .limit(50); // Hard limit to prevent massive payload freeze
 
         if (error) {
             console.error('[Admin Garages] Fetch error:', error);
@@ -113,14 +100,44 @@ export default async function AdminGaragesPage() {
     }
 
     return (
+        <GarageListClient
+            initialGarages={garages}
+            totalCount={totalCount}
+            saveGarage={saveGarage}
+            deleteGarages={deleteGarages}
+        />
+    );
+}
+
+function GaragesSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <div className="h-8 w-48 bg-slate-200/50 rounded-lg mb-2"></div>
+                    <div className="h-4 w-32 bg-slate-200/50 rounded-lg"></div>
+                </div>
+                <div className="h-10 w-32 bg-slate-200/50 rounded-xl"></div>
+            </div>
+            <div className="h-[70vh] w-full bg-white border border-slate-100 rounded-2xl p-4">
+                <div className="h-10 bg-slate-50 rounded-lg mb-4"></div>
+                <div className="space-y-3">
+                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                        <div key={i} className="h-12 bg-slate-50/50 rounded-lg border border-slate-50"></div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function AdminGaragesPage() {
+    return (
         <>
             <GarageUploadClient uploadGarages={uploadGarages} />
-            <GarageListClient
-                initialGarages={garages}
-                totalCount={totalCount}
-                saveGarage={saveGarage}
-                deleteGarages={deleteGarages}
-            />
+            <Suspense fallback={<GaragesSkeleton />}>
+                <GaragesData />
+            </Suspense>
         </>
     );
 }

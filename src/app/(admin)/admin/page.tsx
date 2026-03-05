@@ -3,6 +3,7 @@ import { Inbox, Car, FileText, ChevronRight, Phone } from 'lucide-react';
 import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import StatCard from '@/components/admin/StatCard';
+import { Suspense } from 'react';
 
 const getSupabase = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,7 +14,7 @@ const getSupabase = () => {
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminDashboard() {
+async function DashboardData() {
     const supabase = getSupabase();
 
     let leadCount = 0;
@@ -39,17 +40,8 @@ export default async function AdminDashboard() {
         recentLeads = recentRes.data ?? [];
     }
 
-    const today = new Date().toLocaleDateString('en-IN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-
     return (
         <>
-            <AdminHeader title="Dashboard" subtitle={today} />
-
             {/* ─── STAT CARDS ─── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
                 <StatCard
@@ -91,10 +83,7 @@ export default async function AdminDashboard() {
                         <div className="divide-y divide-slate-50">
                             {recentLeads.map((lead: any, i: number) => (
                                 <div key={lead.id} className="px-5 py-4 flex items-center gap-4 hover:bg-slate-50/60 transition-colors">
-                                    {/* Number */}
                                     <span className="text-[10px] font-bold text-slate-300 w-5 text-right tabular-nums">{i + 1}</span>
-
-                                    {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[13px] font-bold text-slate-800 truncate">{lead.name || 'Anonymous'}</p>
                                         <div className="flex items-center gap-3 mt-0.5">
@@ -110,8 +99,6 @@ export default async function AdminDashboard() {
                                             )}
                                         </div>
                                     </div>
-
-                                    {/* Status */}
                                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${lead.status === 'converted'
                                         ? 'bg-emerald-50 text-emerald-700'
                                         : lead.status === 'contacted'
@@ -120,8 +107,6 @@ export default async function AdminDashboard() {
                                         }`}>
                                         {lead.status || 'pending'}
                                     </span>
-
-                                    {/* Date */}
                                     <span className="text-[10px] text-slate-300 font-medium tabular-nums hidden sm:block">
                                         {lead.created_at
                                             ? new Date(lead.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
@@ -184,6 +169,47 @@ export default async function AdminDashboard() {
                     </div>
                 </Link>
             </div>
+        </>
+    );
+}
+
+function DashboardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="h-28 bg-white border border-slate-100 rounded-[20px] p-6">
+                        <div className="h-4 w-1/3 bg-slate-100 rounded mb-4"></div>
+                        <div className="h-8 w-1/2 bg-slate-100 rounded"></div>
+                    </div>
+                ))}
+            </div>
+            <div className="mb-4 h-3 w-32 bg-slate-200/50 rounded"></div>
+            <div className="bg-white border border-slate-100 rounded-2xl h-64 mb-8"></div>
+            <div className="mb-4 h-3 w-32 bg-slate-200/50 rounded"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1, 2].map(i => (
+                    <div key={i} className="h-24 bg-white border border-slate-100 rounded-2xl"></div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function AdminDashboard() {
+    const today = new Date().toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+
+    return (
+        <>
+            <AdminHeader title="Dashboard" subtitle={today} />
+            <Suspense fallback={<DashboardSkeleton />}>
+                <DashboardData />
+            </Suspense>
         </>
     );
 }
